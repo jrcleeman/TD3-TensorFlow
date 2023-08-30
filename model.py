@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 import datetime as dt
 
+
 class Actor(keras.Model):
 	"""Creates an actor network"""
 	def __init__(self, state_dim, action_dim, max_action):
@@ -17,7 +18,7 @@ class Actor(keras.Model):
 				for one particular action. The output is scaled following the 
 				tanh activation function.
 		"""
-		super(Actor, self).__init__()
+		super(Actor, self).__init__() #scale=1./3.
 		self.layer_1 = keras.layers.Dense(state_dim, activation='relu', 
 		                                  kernel_initializer=tf.keras.initializers.VarianceScaling(
 		                                  	scale=1./3., distribution = 'uniform'))
@@ -103,7 +104,7 @@ class Critic(keras.Model):
 class TD3(object):
 	"""
 		Addressing Function Approximation Error in Actor-Critic Methods"
-		by Fujimoto et al. arxiv.org/abs/1802.09477 
+		by Fujimoto et al. arxiv.org/abs/1802.09477 expl_noise = 0.1,
 	"""
 	def __init__(
 		self,
@@ -116,7 +117,7 @@ class TD3(object):
 		tau = 0.005,
 		noise_std = 0.2,
 		noise_clip = 0.5,
-		expl_noise = 0.1,
+		expl_noise = 0.7,
 		actor_train_interval = 2,
 		actor_lr = 3e-4,
 		critic_lr = 3e-4,
@@ -293,8 +294,22 @@ class TD3(object):
 
 	def save(self, steps):
 		# Save the weights of all the models.
-		self.actor.save_weights('./models/{}/actor_{}'.format(self.current_time, steps))
-		self.actor_target.save_weights('./models/{}/actor_target_{}'.format(self.current_time, steps))
+		print('... saving models ...')
+		#self.actor.save_weights('./models/{}/actor_{}'.format(self.current_time, steps))
+		self.actor.save_weights('./models/actor_')
+		#self.actor_target.save_weights('./models/{}/actor_target_{}'.format(self.current_time, steps))
+		self.actor_target.save_weights('./models/actor_target_')
 
-		self.critic.save_weights('./models/{}/critic_{}'.format(self.current_time, steps))
-		self.critic_target.save_weights('./models/{}/critic_target_{}'.format(self.current_time, steps))
+		#self.critic.save_weights('./models/{}/critic_{}'.format(self.current_time, steps))
+		self.critic.save_weights('./models/critic_')
+		#self.critic_target.save_weights('./models/{}/critic_target_{}'.format(self.current_time, steps))
+		self.critic_target.save_weights('./models/critic_target_')
+
+	def load_models(self):
+		print('... loading models ...')
+		self.actor.load_weights('./models/actor_')
+		self.actor_target.load_weights('./models/actor_target_')
+
+		self.critic.load_weights('./models/critic_')
+		self.critic_target.load_weights('./models/critic_target_')
+
