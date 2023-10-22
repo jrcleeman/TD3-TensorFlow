@@ -104,7 +104,7 @@ class Critic(keras.Model):
 class TD3(object):
 	"""
 		Addressing Function Approximation Error in Actor-Critic Methods"
-		by Fujimoto et al. arxiv.org/abs/1802.09477 expl_noise = 0.1,
+		by Fujimoto et al. arxiv.org/abs/1802.09477 actor_lr = 3e-4,
 	"""
 	def __init__(
 		self,
@@ -117,7 +117,7 @@ class TD3(object):
 		tau = 0.005,
 		noise_std = 0.2,
 		noise_clip = 0.5,
-		expl_noise = 0.7,
+		expl_noise = 0.1,
 		actor_train_interval = 2,
 		actor_lr = 3e-4,
 		critic_lr = 3e-4,

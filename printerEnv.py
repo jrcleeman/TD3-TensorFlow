@@ -1,6 +1,6 @@
 import random
 import numpy
-import pygame
+#import pygame
 #Observer Class, Predicts ideal line width based on VF and OE
 class ObserverNN:
     def __init__(self):
@@ -52,7 +52,7 @@ class Base:
 
 #Printer Class
 class Bird:
-    def __init__(self, bgImg = None, birdImg = None, x = 0, terminalX = 600, feedRate = 200, stageSpeed = 200, layerHeight = 0.5, \
+    def __init__(self, bgImg = None, birdImg = None, x = 0, terminalX = 1800, feedRate = 200, stageSpeed = 200, layerHeight = 0.5, \
                  baseImg1 = None, baseImg2 = None, baseImg3 = None):
         '''Predictor'''
         self.dynamicsNN = DynamicsNN()        
@@ -69,50 +69,39 @@ class Bird:
         self.nominalLH = 0.5
         self.deltaLH = 0.25
         '''Goals'''
-        self.desiredY1 = 400 #self.widthCalculator()
-        self.desiredY2 = random.randint(self.desiredY1 - 200, self.desiredY1 + 200)
-        self.desiredY3 = random.randint(self.desiredY1 - 200, self.desiredY1 + 200)
-        self.bases = Base(self.desiredY1, self.desiredY2, self.desiredY3, terminalX, baseImg1, baseImg2, baseImg3)
+        self.disturbance = random.uniform(-1, 1) #Distrubance
+        if (self.disturbance < 0): #Void
+            self.newWidthGoal =  self.widthCalculator() * (1 + abs(self.disturbance))    
+        elif (self.disturbance > 0): #Overlap
+            self.newWidthGoal = self.widthCalculator() / (1 + abs(self.disturbance))
+        else: #No disturbance
+            self.newWidthGoal = self.widthCalculator()
         '''Position''' 
         self.x = x #Current X Position
         self.terminalX = terminalX
         self.y = self.widthCalculator() #Current Y Pos
         self.positionHistory = []
         self.travelSpeedX = 3
-        '''Strike Counter'''
-        self.strikeCounter = 0
+        #'''Strike Counter'''
+        #self.strikeCounter = 0
         #Image
         self.birdImg = birdImg
         self.bgImg = bgImg
         #Info
-        self.observation_space = 5 #(5,)
+        self.observation_space = 1 #(5,)
         self.action_space = 3
     
     #This makes pygame display
-    def render(self, win):
-        #Draw Background
-        win.blit(self.bgImg, (0,0))
-        #Draw Base
-        self.bases.draw(win)
-        #Draw Bead
-        #self.draw(win)
-        if isinstance(self.y, float) or isinstance(self.y, int):
-            win.blit(self.birdImg, (self.x, self.y))     
-        else:
-            win.blit(self.birdImg, (self.x, self.y.numpy()))
-
-        '''Print Process Parameters in Game'''
-        '''
-        STAT_FONT = pygame.font.SysFont("comicsans", 50) #In game font
-        score_label = STAT_FONT.render("Feed Rate: " + str(round(self.feedRate, 2)),1,(0,255,0))
-        win.blit(score_label, (self.terminalX - score_label.get_width() - 15, 50))
-        score_label = STAT_FONT.render("Stage Speed: " + str(round(self.stageSpeed, 2)),1,(0,255,0))
-        win.blit(score_label, (self.terminalX - score_label.get_width() - 15, 600))
-        score_label = STAT_FONT.render("Layer Height: " + str(round(self.layerHeight, 2)),1,(0,255,0))
-        win.blit(score_label, (self.terminalX - score_label.get_width() - 15, 700))
-        #'''
+    '''
+    def render(self):
+        #print("Reward: ") #FIX ME????
+        print(self.disturbance)
+        print(self.newWidthGoal)
+        print("Feed Rate: " + str(round(self.feedRate, 2)))
+        print("Stage Speed: " + str(round(self.stageSpeed, 2)))
+        print("Layer Height: " + str(round(self.layerHeight, 2)))
         return
-    
+    '''
     #Reset bird to original state
     def reset(self):
         '''Reset Parameters'''
@@ -120,60 +109,117 @@ class Bird:
         self.stageSpeed = self.nominalSS
         self.layerHeight = self.nominalLH
         '''Reset Goals'''
-        self.desiredY1 = 400 #self.widthCalculator()
-        self.desiredY2 = random.randint(self.desiredY1 - 100, self.desiredY1 + 100)
-        if self.desiredY2 < self.desiredY1:
-            self.desiredY3 = random.randint(self.desiredY1 - 100, self.desiredY1)
-        else:
-            self.desiredY3 = random.randint(self.desiredY1, self.desiredY1 + 100)
-        self.bases.reset(self.desiredY1, self.desiredY2, self.desiredY3)
+        self.disturbance = random.uniform(-1, 1) #Distrubance
+        if (self.disturbance < 0): #Void
+            self.newWidthGoal =  self.widthCalculator() * (1 + abs(self.disturbance))    
+        elif (self.disturbance > 0): #Overlap
+            self.newWidthGoal = self.widthCalculator() / (1 + abs(self.disturbance))
+        else: #No disturbance
+            self.newWidthGoal = self.widthCalculator()
         '''Reset Position'''
         self.x = 0
         self.y = self.widthCalculator()
-        self.positionHistory = []
         '''Reset State'''
-        self.desiredY = self.desiredY1 #self.widthCalculator()
-        currentState = [self.desiredY, self.y, self.feedRate, self.stageSpeed, self.layerHeight]
+        currentState = [self.disturbance]
         currentState = numpy.array(currentState)
-        '''Reset Strikes'''
-        self.strikeCounter = 0
 
         return currentState
+
+    def semiSet(self):
+        '''Reset Parameters'''
+        self.feedRate = self.nominalFR
+        self.stageSpeed = self.nominalSS
+        self.layerHeight = self.nominalLH
+        '''Reset Goals'''
+        self.disturbance = random.uniform(-1, 1) #Distrubance
+        if (self.disturbance < 0): #Void
+            self.newWidthGoal =  self.widthCalculator() * (1 + abs(self.disturbance))    
+        elif (self.disturbance > 0): #Overlap
+            self.newWidthGoal = self.widthCalculator() / (1 + abs(self.disturbance))
+        else: #No disturbance
+            self.newWidthGoal = self.widthCalculator()
+        '''Reset Position'''
+        self.y = self.widthCalculator()    
     
+    def rescaleReward(self, input, xLow, xHigh, rewardLow, rewardHigh):
+        reward = rewardLow + ((input - xLow) * (rewardHigh - rewardLow) / (xHigh - xLow))
+        return reward
+
     def calculateReward(self):
+        '''Increasing Level Difficulty and Reward'''
+        levelBonus = 1
+        errorThreshold = -1
+        failPenalty = -50
+        checkpoint1 = 600
+        checkpoint2 = 1200
+        if (self.x > checkpoint1):
+            constant = 0.75 / 1200
+            errorThreshold = -1 + (constant * self.x)
+            levelBonus = 1 + (0.01 * self.x)
+            failPenalty = -25
+        elif (self.x > checkpoint2):
+            constant = 0.95 / 1800
+            errorThreshold = -1 + (constant * self.x)
+            levelBonus = 1 + (0.01 * self.x)
+            failPenalty = -12  
+        '''Mission Complete Bonus'''
+        if (self.x >= (self.terminalX - self.travelSpeedX)):
+            levelBonus = 5000
+
         '''Parameter Reward'''
+        parameterLow = -5
         #Feed Rate Fitness Calc
         fitnessFR = abs(self.feedRate - self.nominalFR)
         fitnessFR = fitnessFR * (-1 / (self.nominalFR - self.deltaFR)) #Normalized, between 0 and -1
+        fitnessFR = self.rescaleReward(fitnessFR, -1, 0, parameterLow, 0)
         #Stage Speed Fitness Calc
         fitnessSS = abs(self.stageSpeed - self.nominalSS)
         fitnessSS = fitnessSS * (-1 / (self.nominalSS - self.deltaSS)) #Normalized, between 0 and -1
+        fitnessSS = self.rescaleReward(fitnessSS, -1, 0, parameterLow, 0)
         #Layer Height Fitness Calc
         fitnessLH = abs(self.layerHeight - self.nominalLH)
         fitnessLH = fitnessLH * (-1 / (self.nominalLH - self.deltaLH)) #Normalized, between 0 and -1
+        fitnessLH = self.rescaleReward(fitnessLH, -1, 0, parameterLow, 0)
+        parameterReward = fitnessFR + fitnessSS + fitnessLH
 
         '''Width reward'''
-        isDone = False
-        limit = -100
-        x_low = -100 #Greatest Width Err
-        x_high = 0 #Smallest Width Err
-        Rlow = 0 #lowest reward
+        widthError = self.y - self.newWidthGoal
+        if (widthError < 0): #Void Present
+            inputError = -1 * ((self.newWidthGoal / self.y) - 1)
+            if (inputError < -1): #Error limiter
+                inputError = 1                
+        elif (widthError > 0): #Overlap Present
+            inputError = (self.y / self.newWidthGoal) - 1
+            if (inputError > 1): #Error limiter
+                inputError = 1
+        
+        calculationError = -1 * abs(inputError)
+        errorLow = -1 #Greatest Error Value
+        errorHigh = 0 #Smallest Error Value
+        Rlow = -10 #lowest reward
         Rhigh = 10 #highest reward
-        error = -1 * abs(self.y - self.desiredY)
+        errorReward = Rlow + ((calculationError - errorLow) * (Rhigh - Rlow) / (errorHigh - errorLow))
+
+        isDone = False          
         '''Game Over'''
-        if error < -150:
-            self.strikeCounter += 1
-            fitnessW = 0
-            if self.strikeCounter >= 3:
+        if calculationError <= errorThreshold:
+            isDone = True #terminal flag
+            timeStepFitness = failPenalty #Negative reward for losing
+            #print("death: " + str(self.x))
+            return timeStepFitness, isDone
+        elif (self.x > checkpoint1): #Parameter Constraints
+            parameterThreshold = -0.9
+            if (self.x > checkpoint2):
+                parameterThreshold = -0.8
+            if ((fitnessFR < parameterThreshold) or (fitnessSS < parameterThreshold) or (fitnessLH < parameterThreshold)):
                 isDone = True #terminal flag
-                timeStepFitness = -200 #Negative reward for losing
+                timeStepFitness = failPenalty #Negative reward for losing
+                #print("death: " + str(self.x))
                 return timeStepFitness, isDone
 
-        else:
-            fitnessW = Rlow + ((error - x_low) * (Rhigh - Rlow) / (x_high - x_low))
-            
         '''Total Step Reward'''
-        timeStepFitness = fitnessFR + fitnessSS + fitnessLH + fitnessW
+        #levelBonus = 1
+        timeStepFitness = parameterReward + errorReward + levelBonus
         return timeStepFitness, isDone
 
     #Call global NN predictor
@@ -188,17 +234,27 @@ class Bird:
         self.updateLayerHeight(outputArray[2])
         self.move()
 
-        #Adjust Y Targets
-        if (self.x <= (self.terminalX / 3)):
-            self.desiredY = self.desiredY1
-        elif (self.x <= (2 * self.terminalX / 3)):
-            self.desiredY = self.desiredY2
-        else:
-            self.desiredY = self.desiredY3
-
         #Return Reward, State, Done Flag
         timeStepFitness, isDone = self.calculateReward() #Reward
-        currentState = [self.desiredY, self.y, self.feedRate, self.stageSpeed, self.layerHeight]
+
+        #Render
+        render = False
+        if render:
+            '''
+            print("Disturbance: " + str(self.disturbance))
+            print("New Width Goal: " + str(self.newWidthGoal))
+            print("Reward: " + str(self.widthCalculator()))
+            print("Feed Rate: " + str(round(self.feedRate, 2)))
+            print("Stage Speed: " + str(round(self.stageSpeed, 2)))
+            print("Layer Height: " + str(round(self.layerHeight, 2)))
+            '''
+            if (self.x == 600):
+                print("level 1 passed")
+            if (self.x > 1200):
+                print("goated")
+
+        self.semiSet() #semi reset
+        currentState = [self.disturbance]
         currentState = numpy.array(currentState)
         terminalState = (True if self.x >= self.terminalX or isDone else False) #Done Flag
         return currentState, timeStepFitness, terminalState
@@ -222,7 +278,7 @@ class Bird:
         #X Travel Speed (Constant)
         self.x += self.travelSpeedX
         #Update Position History
-        self.positionHistory.append([self.x, self.y])
+        #self.positionHistory.append([self.x, self.y])
 
     #Method for drawing the print
     def draw(self, win):

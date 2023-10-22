@@ -51,11 +51,11 @@ policy = TD3(state_dim, action_dim, max_action, current_time=current_time, summa
 
 
 
-max_timesteps = 2e7
+max_timesteps = 1300000
 start_timesteps = 1e4
 total_timesteps = 0
 eval_freq = 5e3
-save_freq = 1e5
+save_freq = 3000
 eval_counter = 0
 episode_num = 0
 episode_reward = 0
