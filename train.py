@@ -5,8 +5,9 @@ from model import TD3
 from replaybuffer import ReplayBuffer
 import datetime as dt
 import tensorflow as tf
-from printerEnv import Bird
+from printerEnv import FDM
 import random
+import numpy as np
 
 current_time = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
 if not os.path.exists('./logs/' + current_time):
@@ -19,7 +20,7 @@ if not os.path.exists('./models/' + current_time):
 #env = gym.make('BipedalWalker-v3') #gym.make("AntBulletEnv-v0")
 # env = wrappers.Monitor(env, save_dir, force = True) 
 #env.seed(0)
-env = Bird()
+env = FDM()
 action_dim = env.action_space#.shape[0]
 state_dim = env.observation_space#.shape[0]
 max_action = 1.0 #float(env.action_space.high[0])
@@ -35,6 +36,7 @@ def evaluate_policy(policy, eval_episodes=10):
 		while not done:
 			action = policy.select_action(state)
 			#state, reward, done, _ = env.step(action)
+			print(action)
 			state, reward, done = env.step(action)
 			avg_reward += reward
 	avg_reward /= eval_episodes
@@ -51,7 +53,7 @@ policy = TD3(state_dim, action_dim, max_action, current_time=current_time, summa
 
 
 
-max_timesteps = 1300000
+max_timesteps = 500000
 start_timesteps = 1e4
 total_timesteps = 0
 eval_freq = 5e3

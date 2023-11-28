@@ -5,11 +5,11 @@ from model import TD3
 from replaybuffer import ReplayBuffer
 import datetime as dt
 import tensorflow as tf
-from printerEnv import Bird
+from printerEnv import FDM
 
 if __name__ == '__main__':
     # initialise the environment
-    env = Bird()
+    env = FDM()
     action_dim = env.action_space#.shape[0]
     state_dim = env.observation_space#.shape[0]
     max_action = 1.0 #float(env.action_space.high[0])
@@ -51,4 +51,4 @@ if __name__ == '__main__':
             total_timesteps += 1
         
         #Print Ep Reward
-        print('Episode: {}, Episode Reward: {:.2f}'.format(episode_num, total_timesteps, episode_reward))
+        #print('Episode: {}, Episode Reward: {:.2f}'.format(episode_num, total_timesteps, episode_reward))
